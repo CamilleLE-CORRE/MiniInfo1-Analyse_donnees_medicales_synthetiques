@@ -43,11 +43,35 @@ int countLinesInFile(char file_name[]){
     return nb_lines;
 }
 
+
+
 //!\\ soit faire 2 fonctions ParseLine pour les 2 fichiers a parser, soit donner en argument les champs a remplir, soit autre chose
 void ParseLine(char line[]){
     /* Utilise les caracteres $ pour separer les donnees d'une ligne donnee en argument et les ajouter aux donnees des patients */
 
     int length = strlen(line);
+    char *temp;  // initialisation d'une chaine de caracteres, qui contiendra les donnees de la ligne
+
+    char *value;
+    float result = strtol(temp, &value, 10);
+
+
+    for (int i=0; i<length; i++){   // analyse de chaque caractere de la ligne
+        if (line[i] == '$' || line[i] == '\n'){    // si le caractere est un $ (separateur) ou une fin de ligne
+        
+            if (*temp == "True"){
+                *temp = "1";
+            }
+            else if (*temp == "False"){
+                *temp = "0";
+            }
+            char *temp;      // reinitialiser la variable temp
+
+            /*if (!*temp.isalpha()){
+
+            }*/
+        }
+    }
 
     // corre de la fonction
 }
