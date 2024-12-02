@@ -6,14 +6,13 @@
 #include <ctype.h>
 
 
-
 /// Construction de la structure de donnees Patient ///
 /// contenant toutes les informations sur un patient donne ///
 
         //id, age, sex, weight, blood_pressure, average_heart_rate, blood_sugar, cholesterol, risk
         //physical_activity, alcohol_consumption, caffeine_consumption, sleep_quality
 
-typedef struct Patient{
+typedef struct Patient{ 
     int id;
     int age;
     char sex;
@@ -104,14 +103,14 @@ int BoolToInt(char value[]){
 
 }
 
-void AddValueToPatientData(char value[], Patient *p, Patients_info info){
+void AddValueToPatientData(char value[], Patient *p, Patients_info info, str /* pas le bon type */ champs){
     /* Prend en argument une chaine de caracteres, convertie son type et l'ajoute aux donnees des patients */
 
     int length = strlen(value);
 
     if (isalpha(value[0])){     // si le premier caractere est un caractere alphabetique
 
-        if (length == 1){   // si la chaine de caracteres est composee d'un seul caracteres (cas unique du sexe : 'F' ou 'M')
+        if (length == 1){   // si la chaine de caracteres est composee d'un seul caractere (cas unique du sexe : 'F' ou 'M')
             (*p).sex = value[0];
         }
         else {      // cas unique du risque ("True" ou "False")
@@ -127,8 +126,8 @@ void AddValueToPatientData(char value[], Patient *p, Patients_info info){
         else {  // si c'est un entier
             int val = CharToInt(value, length);
         }
+        p.champs = val;
     }
-
 }
 
 
@@ -211,17 +210,6 @@ void BrowseFile(char file_name[], Patient patientsData[5000]){
 /// Appel des fonctions declarees precedemment ///
 
 int main(){
-
-    char array1[] = {'2', '.', '3'}; // Tableau initial
-    size_t length1 = sizeof(array1) / sizeof(array1[0]); // Taille du tableau
-
-    CharToFloat(array1, length1);
-
-    char array2[] = {'2', '6', '3'}; // Tableau initial
-    size_t length2 = sizeof(array2) / sizeof(array2[0]); // Taille du tableau
-
-    printf("%d", CharToInt(array2, length2));
-
 
     const char *info[] = {"id", "age", "sex", "weight", "blood_pressure", "average_heart_rate", "blood_sugar", "cholesterol",
                         "physical_activity", "alcohol_consumption", "caffeine_consumption", "sleep_quality", "risk"};
