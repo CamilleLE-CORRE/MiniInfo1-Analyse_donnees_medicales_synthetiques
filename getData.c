@@ -5,6 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 
+int MAX_PATIENTS = 100;
+int MAX_FIELDS = 9;
 
 /// Construction de la structure de donnees Patient ///
 /// contenant toutes les informations sur un patient donne ///
@@ -12,7 +14,7 @@
         //id, age, sex, weight, blood_pressure, average_heart_rate, blood_sugar, cholesterol, risk
         //physical_activity, alcohol_consumption, caffeine_consumption, sleep_quality
 
-typedef struct Patient{ 
+typedef struct Patient {
     int id;
     int age;
     char sex;
@@ -21,11 +23,11 @@ typedef struct Patient{
     int average_heart_rate;
     float blood_sugar;
     float cholesterol;
-    int physical_activity;
-    float alcohol_consumption;
-    float caffeine_consumption;
-    float sleep_quality;
-    int risk;   // il faudra transformer les True/False en 1/0
+    int physical_activity;     // Placeholder
+    float alcohol_consumption; // Placeholder
+    float caffeine_consumption; // Placeholder
+    float sleep_quality;       // Placeholder
+    int risk;
 } Patient;
 
 // Structure enum contenant les champs de la structure Patient //
@@ -36,7 +38,6 @@ typedef enum Patients_info{
     id = 1, age = 2, sex = 3, weight = 4, blood_pressure = 5, average_heart_rate = 6, blood_sugar = 7, cholesterol = 8,
     physical_activity = 9, alcohol_consumption = 10, caffeine_consumption = 11, sleep_quality = 12, risk = 13
 } Patients_info;
-
 
 /// Fonctions pour analyser chaque ligne du fichier et construire la structure de donnees ///
 
@@ -103,7 +104,7 @@ int BoolToInt(char value[]){
 
 }
 
-void AddValueToPatientData(char value[], Patient *p, Patients_info info, str /* pas le bon type */ champs){
+void AddValueToPatientData(char value[], Patient *p, Patients_info info, int/* pas le bon type */ champs){
     /* Prend en argument une chaine de caracteres, convertie son type et l'ajoute aux donnees des patients */
 
     int length = strlen(value);
@@ -126,7 +127,7 @@ void AddValueToPatientData(char value[], Patient *p, Patients_info info, str /* 
         else {  // si c'est un entier
             int val = CharToInt(value, length);
         }
-        p.champs = val;
+        //p.champs = val;
     }
 }
 
@@ -149,10 +150,11 @@ void ParseLine(char line[], int i_patient, Patient patientsData[5000]){
 
     while (i_line<length){   // analyse de chaque caractere de la ligne
 
-        if (line[i_line] != '$'){   // si le caractere est un $ (separateur)
+        if (line[i_line] != '$'){   // si le caractere est un $ (separateur) OU FIN DE LIGNE
             //AddValueToPatientData(temp, &patientsData[i_patient],);
             i_champs++;
             char temp[5];   // reinitialisation de temp
+            i_val = 0;
         }
         else {      // si ce n'est pas un separateur, c'est un caractere des donnees d'un patient
 
@@ -176,7 +178,7 @@ void ParseLine(char line[], int i_patient, Patient patientsData[5000]){
     // corre de la fonction
 }
 
-void BrowseFile(char file_name[], Patient patientsData[5000]){
+void BrowseFileV1(char file_name[], Patient patientsData[5000]){
     /* Lit l'ensemble du fichier donne en argument ligne par ligne, et appelle la fonction
     ParseLine pour analyser chaque ligne et ajouter les donnees au tableau patientsData*/
     // Une partie de la fonction a ete recuperee sur GeeksforGeeks (https://www.geeksforgeeks.org/c-program-to-read-contents-of-whole-file/)
@@ -203,7 +205,109 @@ void BrowseFile(char file_name[], Patient patientsData[5000]){
         // read.
         fclose(file);
     }
+}
 
+void AddValuesToPatientsData(Patient* p, char *tokens[]){
+    // ChatGPT pour savoir qu'il faut mettre -> et pas .
+
+    //printf("hello t'es la ouuuu ???\n");
+    //printf("id : %d\n", *tokens[0]);
+    p->id = atoi(tokens[0]);
+    p->age = atoi(tokens[1]);
+    p->sex = tokens[2][0];
+    p->weight = atof(tokens[3]);
+    p->blood_pressure = atoi(tokens[4]);
+    p->average_heart_rate = atoi(tokens[5]);
+    p->blood_sugar = atof(tokens[6]);
+    p->cholesterol = atof(tokens[7]);
+    p->risk = BoolToInt(tokens[8]);
+}
+
+void AddValuesToPatientsData2(Patient* p, char *tokens[]){
+    p->physical_activity = atoi(tokens[1]);
+    p->alcohol_consumption = atof(tokens[2]);
+    p->caffeine_consumption = atof(tokens[3]);
+    p->sleep_quality = atof(tokens[4]);
+}
+
+void BrowseFilePatients(char file_name[], Patient (*PatientsData)[MAX_PATIENTS]){
+
+    //printf("test 1\n");
+
+    FILE *file = fopen(file_name, "r");
+    
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+    }
+
+    int i_line = 0;
+
+    char line[256];
+
+    fgets(line, sizeof(line), file);    // lecture de la premiere ligne du fichier (nom des colonnes), que l'on ignore
+
+    // Lire chaque ligne
+    while (fgets(line, sizeof(line), file) && i_line < MAX_PATIENTS) {
+        printf("test 4\n");
+        // Initialisation d'un nouveau patient
+        Patient p;
+
+        char *tokens[MAX_FIELDS];
+        int field_index = 0;
+
+        // Découper la ligne en tokens
+        char *token = strtok(line, "$");
+        while (token != NULL && field_index < MAX_FIELDS) {
+            tokens[field_index++] = token;
+            token = strtok(NULL, "$");
+        }
+
+        // Assigner les valeurs via les indices
+        AddValuesToPatientsData(&p, tokens);
+
+        // Ajouter au tableau
+        i_line++;
+        *PatientsData[i_line] = p;  // utile ???
+    }
+
+    fclose(file);
+    //printf("test 5\n");
+}
+
+void BrowseFileLivestyle(char file_name[], Patient *PatientsData[]){
+
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+    }
+
+    int i_line = 0;
+
+    char line[256];
+
+    fgets(line, sizeof(line), file);    // lecture de la premiere ligne du fichier (nom des colonnes), que l'on irgnore
+
+    // Lire chaque ligne
+    while (fgets(line, sizeof(line), file) && i_line < MAX_PATIENTS) {
+
+        char *tokens[MAX_FIELDS];
+        int field_index = 0;
+
+        // Découper la ligne en tokens
+        char *token = strtok(line, "$");
+        while (token != NULL && field_index < MAX_FIELDS) {
+            tokens[field_index++] = token;
+            token = strtok(NULL, "$");
+        }
+
+        // Assigner les valeurs via les indices
+        AddValuesToPatientsData2(PatientsData[i_line], tokens);
+
+        // Ajouter au tableau
+        i_line++;
+    }
+
+    fclose(file);
 }
 
 /// Fonction main ///
@@ -211,17 +315,22 @@ void BrowseFile(char file_name[], Patient patientsData[5000]){
 
 int main(){
 
-    const char *info[] = {"id", "age", "sex", "weight", "blood_pressure", "average_heart_rate", "blood_sugar", "cholesterol",
-                        "physical_activity", "alcohol_consumption", "caffeine_consumption", "sleep_quality", "risk"};
-
-
     // Creation du tableau patientsData //
     // contenant toutes les informations de tous les patients //
 
-    Patient patientsData[5000]; // aller chercher le nombre de lignes dans patients.pengu (fonction countLinesInFile()) => -1
+    //Patient patientsData[5000]; // aller chercher le nombre de lignes dans patients.pengu (fonction countLinesInFile()) => -1
 
-    //BrowseFile("patients.pengu");
-    //BrowseFile("lifestyle.pengu");
-    
+    Patient PatientsData[MAX_PATIENTS];
+    BrowseFilePatients("patients.pengu", &PatientsData);
+
+
+    // Afficher les données pour vérification
+    for (int i = 0; i < 5; i++) {
+        printf("Patient %d: ID=%d, Age=%d, Sex=%c, Weight=%.1f, BP=%d, HR=%d, Blood Sugar=%.1f, Cholesterol=%.1f, Risk=%d\n",
+               i + 1, PatientsData[i].id, PatientsData[i].age, PatientsData[i].sex, PatientsData[i].weight,
+               PatientsData[i].blood_pressure, PatientsData[i].average_heart_rate, PatientsData[i].blood_sugar,
+               PatientsData[i].cholesterol, PatientsData[i].risk);
+    }
+
     return 0;
 }
