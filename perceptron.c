@@ -50,9 +50,12 @@ void melangerTableau(int* tableau, int taille){
     }
 }
 
+typedef struct Res {
+        int* tab1;
+        int* tab2;
+    } Res;
 
-
-int* echantillonage(int N1, float p){
+Res echantillonage(int N1, float p){
 
     /* Cette fonction permet de separer l'ensemble des donnees en deux : donnees d'entrainement et donnees de test.
 
@@ -64,30 +67,35 @@ int* echantillonage(int N1, float p){
 
     // Cree un tableau d'entiers de 1 à N1
     int* tableau = creerTableauEntiers(N1);
-    for (int i=0; i<10; i++){
-        printf("%d ", tableau[i]); 
-    }
-    printf("\n");
 
     // Melange les elements de ce tableau
     melangerTableau(tableau, N1);
 
-    // Calcul de la taille du tableau reduit (N2) et initialisation de ce tableau
+    // Calcul de la taille du premier tableau reduit (de taille N2) et initialisation de ce tableau
     int N2 = N1*p; // taille du tableau reduit
-    //int* tableau_reduit[N2];
-    int* tableau_reduit = (int*)malloc(N2 * sizeof(int));
+    int* tableau_reduit1 = (int*)malloc(N2 * sizeof(int));
 
-    // Calcul de la taille d
-
-
-    // Remplissage de tableau_reduit avec les premiers elements du tableau initial (melange)
+    // Remplissage de tableau_reduit1 avec les premiers elements du tableau initial (melange)
     for (int i=0; i<N2; i++){
-        tableau_reduit[i] = tableau[i];
+        tableau_reduit1[i] = tableau[i];
     }
+
+    // Calcul de la taille du deuxieme tableau réduit (de taille N3) et initialisation de ce tableau
+    int N3 = N1 - N2;
+    int* tableau_reduit2 = (int*)malloc(N3 * sizeof(int));
+
+    // Remplissage de tableau_reduit2 avec les derniers elements du tableau initial (melange)
+    for (int i=N2; i<N1; i++){
+        tableau_reduit2[i-N2] = tableau[i];
+    }
+
+    Res res;
+    res.tab1 = tableau_reduit1;
+    res.tab2 = tableau_reduit2;
 
     free(tableau);
 
-    return tableau_reduit;
+    return res;
 }
 
 int activation(float z){
@@ -118,6 +126,7 @@ float perceptron(int c1, int c2, float b){
 int main(){
 
     ////////////////////////////////////////////////////////
+    // Initialisation de la structure de donnees
     char* PatientsData[MAX_PATIENTS][MAX_FIELDS];
     memset(PatientsData, 0, sizeof(PatientsData));
     BrowseFilePatients("patients.pengu", PatientsData);
@@ -130,24 +139,18 @@ int main(){
         }
     }
     ///////////////////////////////////////////////////////
-
-    int* data_train;
-    int* data_test;
-
-    int* tab_red = echantillonage(10,0.75);
-    for (int i=0; i<7; i++){
-        printf("%d ", tab_red[i]);
-    }
-    printf("\n");
-
-
+    // Formation des deux jeux de donnees : entrainement et test    
+    Res res = echantillonage(10, 0.7);
+    int* data_train = res.tab1;
+    int* data_test = res.tab2;
+    ///////////////////////////////////////////////////////
 
     int b; // = ?
 
     int best_c1 = 1;
     int best_c2 = 2;
     //float best_error_rate = perceptron(1, 2, b);
-    float res;
+    //float res;
     
     // Recuperer tous les couples (c1, c2) des champs de patients.pengu
     // for (int c1 = 2; c1 < 7; c1++){
