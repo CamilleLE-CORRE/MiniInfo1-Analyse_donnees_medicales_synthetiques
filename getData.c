@@ -6,8 +6,10 @@
 #define MAX_FIELDS 20
 
 void BrowseFilePatients(char file_name[], char* PatientsData[MAX_PATIENTS][MAX_FIELDS]) {
+
     /* Remplit le tableau PatientsData avec les donnees du fichier patients
      dont le nom ets passe en argument de la fonction */
+
 
     FILE *file = fopen(file_name, "r");
 
@@ -45,8 +47,10 @@ void BrowseFilePatients(char file_name[], char* PatientsData[MAX_PATIENTS][MAX_F
 }
 
 void BrowseFileLivestyle(char file_name[], char* PatientsData[MAX_PATIENTS][MAX_FIELDS]) {
+
     /* Remplit le tableau PatientsData avec les donnees du fichier livestyle dont le nom
      est passe en argument de la fonction */
+
 
     FILE *file = fopen(file_name, "r");
 
