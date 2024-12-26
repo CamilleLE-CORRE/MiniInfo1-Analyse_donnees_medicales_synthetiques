@@ -80,7 +80,22 @@ void BrowseFileLivestyle(char file_name[], char* PatientsData[MAX_PATIENTS][MAX_
     fclose(file);
 }
 
-int main() {
+// char* InitializeDataStruct(){
+//     /* Retourne un pointeur vers la structure de donnees creee */
+
+//     // Création du tableau PatientsData
+//     char* PatientsData[MAX_PATIENTS][MAX_FIELDS];
+
+//     memset(PatientsData, 0, sizeof(PatientsData));
+
+//     BrowseFilePatients("patients.pengu", PatientsData);
+//     BrowseFileLivestyle("lifestyle.pengu", PatientsData);
+
+//     return PatientsData;
+// }
+
+int main() {    // il faudra enlever le main apres
+
     // Création du tableau PatientsData
     char* PatientsData[MAX_PATIENTS][MAX_FIELDS];
 
