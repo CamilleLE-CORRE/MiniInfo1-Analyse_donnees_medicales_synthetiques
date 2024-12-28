@@ -14,6 +14,8 @@
     // appliquer la fonction d'activation pourclasser dans la classe 0 ou 1
 
 
+//// Fonctions pour la construction des deux jeux de donnees ////
+
 int* creerTableauEntiers(int N){
 
     /* Retourne un tableau des entiers de 1 à N */
@@ -98,6 +100,36 @@ Res echantillonage(int N1, float p){
     return res;
 }
 
+
+char* getDataFromFeature(char* PatientsData[MAX_PATIENTS][MAX_FIELDS], int patientID, int featureID){       // utile ??
+
+    /* Retourne la valeur de la caracteristique demandee pour le patient souhaite (passes en argument de la fonction)*/
+
+    return PatientsData[patientID][featureID];
+}
+
+float charToFloat(char* str){
+    return atof(str);
+}
+
+// int charToInt(char* str){
+//     return atoi(str);
+// }
+
+int qualitativeToInt(char* str, char* val){
+
+    /* Prend en argument une chaine de caracteres str et renvoie 1 si str = val, 0 sinon */
+    // est utilisé pour transformer le sexe (H ou F) en 0 ou 1
+
+    if (str == val){
+        return 1;   
+    }
+    else {
+        return 0;
+    }
+}
+
+
 int activation(float z){
     if (z>=0){
         return 1;
@@ -107,19 +139,81 @@ int activation(float z){
     }
 }
 
-float perceptron(int c1, int c2, float b){
+typedef struct ResPerceptron{
+    float w1;
+    float w2;
+    float b;
+    float nu;
+    float error_rate;
+} ResPerceptron;
+
+ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FIELDS]){
 
     /* Effectue l'entrainement du perceptron pour les champs c1 et c2
     et retourne son taux d'erreur*/
 
+    // Declaration des variables
+    float vect_x1[MAX_PATIENTS];
+    float vect_x2[MAX_PATIENTS];
+    float vect_risque[MAX_PATIENTS];    // vecteur contenant des 0 ou des 1
+    float w1;
+    float w2;
+    float b=1;
+    float nu=0.001;   //prendre ensuite une valeur aléatoire ?? 
+    int iteration=0;
+    float error_rate;
+    int cpt_erreurs;
 
-    //int taille_tableau_reduit = taille*0.7;
+    // Stocker les valeurs des champs c1 et c2 pour tous les patients, ainsi que leur risque respectif
+    for (int i=0; i<5000; i++){
+        vect_x1[i] = charToFloat(PatientsData[i][c1]);
+        vect_x2[i] = charToFloat(PatientsData[i][c2]);
+        vect_risque[i] = charToFloat(PatientsData[i][8]);
+    }
 
-    //int learning_data[taille_tableau_reduit] =  
+    // Initialisation de w1 et w2 par un flottant aleatoire dans [-1;1]
+    srand(time(NULL));
+    w1 = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+    w2 = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
 
-    // récupérer x1 et x2, les données de c1 et c2 pour p
 
-    
+    while (iteration < 100){    // au maximum 100 itérations
+        //printf("une iteration\n");
+        int test=0;
+        cpt_erreurs = 0;
+
+        for (int patient=0; patient<3500; patient++){   // pour chaque patient
+            
+            // Utilisation de la fonction d'activation pour determiner le risque du patient
+            int risque = activation(vect_x1[patient]*w1 + vect_x2[patient]*w2 + b);
+
+            // Comparaison du risque predit avec le risque attendu
+            if (risque != vect_risque[patient]){    // s'il s'agit d'une erreur
+                test++;
+                cpt_erreurs++;
+
+                // Modification des poids w1 et w2, ainsi que du biais b
+                w1 += nu * (vect_risque[patient] - risque) * vect_x1[patient];
+                w2 += nu * (vect_risque[patient] - risque) * vect_x2[patient];
+                b += nu * (vect_risque[patient] - risque);
+            }
+        }
+        printf("%d\n", test);
+        iteration++;
+    }
+
+    // Calcul du taux d'erreur
+    error_rate = cpt_erreurs/3500;      // 3500 à modifier -> mettre taille de vect_x1
+
+    // Resultat en sortie
+    ResPerceptron res;
+    res.w1=w1;
+    res.w2=w2;
+    res.b=b;
+    res.nu=nu;
+    res.error_rate=error_rate;
+
+    return res;
 }
 
 
@@ -145,24 +239,32 @@ int main(){
     int* data_test = res.tab2;
     ///////////////////////////////////////////////////////
 
-    int b; // = ?
+    //int b; // = ?
 
+    // Initialisation des variables permettant de stocker le meilleur score et les caracteristiques associees
     int best_c1 = 1;
     int best_c2 = 2;
-    //float best_error_rate = perceptron(1, 2, b);
-    //float res;
-    
-    // Recuperer tous les couples (c1, c2) des champs de patients.pengu
-    // for (int c1 = 2; c1 < 7; c1++){
-    //     for (int c2 = 3; c2 < 8; c2++){
+    float best_error_rate = perceptron(1, 2, PatientsData).error_rate;
 
-    //         res = perceptron(c1, c2, b);
+    // Pour chaque couple (c1, c2) des champs de patients.pengu
+    for (int c1 = 1; c1 < 8; c1++){
+        for (int c2 = c1+1; c2 < 8; c2++){
+            if (c1 != c2){
 
-    //         if (res < best_error_rate){ // Memoriser les meilleurs champs
-    //             best_c1 = c1;
-    //             best_c2 = c2;
-    //         }
-    //     }
-    // }
+                //printf("champs testes : %d et %d\n", c1, c2);
+                //ResPerceptron res = perceptron(c1, c2, PatientsData);
+                //printf("resultats : w1=%f, w2=%f, b=%f, nu=%f\n", res.w1, res.w2, res.b, res.nu);
+                //printf("taux d'erreur = %f\n", res.error_rate);
+                // float res = perceptron(c1, c2, b);
+
+                // if (res < best_error_rate){ // Memoriser les meilleurs champs
+                //     best_c1 = c1;
+                //     best_c2 = c2;
+                // }
+            }
+            
+        }
+    }
+
     return 0;
 }

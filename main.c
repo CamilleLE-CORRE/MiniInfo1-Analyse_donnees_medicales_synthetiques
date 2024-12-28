@@ -29,9 +29,9 @@ int main(){
     // }
 
     // Echantillonage : division des donnees en deux jeux de donnees disjoints (donnees d'entrainement et donnees de test)
-    Res res = echantillonage(10, 0.7);
-    int* data_train = res.tab1;
-    int* data_test = res.tab2;
+    // Res res = echantillonage(10, 0.7);
+    // int* data_train = res.tab1;
+    // int* data_test = res.tab2;
     
     // printf("train: ");
     // for (int i=0; i<7; i++){
