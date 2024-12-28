@@ -101,13 +101,6 @@ Res echantillonage(int N1, float p){
 }
 
 
-char* getDataFromFeature(char* PatientsData[MAX_PATIENTS][MAX_FIELDS], int patientID, int featureID){       // utile ??
-
-    /* Retourne la valeur de la caracteristique demandee pour le patient souhaite (passes en argument de la fonction)*/
-
-    return PatientsData[patientID][featureID];
-}
-
 float charToFloat(char* str){
     return atof(str);
 }
@@ -115,6 +108,29 @@ float charToFloat(char* str){
 // int charToInt(char* str){
 //     return atoi(str);
 // }
+
+float CharToFloat(char array[], size_t length, int c){
+
+    /// Bout de code ChatGPT ===>>> a modifier ensuite
+
+    // Gestion du sexe M/F transforme en 0/1
+    if (c==2){
+        if (array[0] == 'M'){
+            array[0] = '1';
+        }
+        else{
+            array[0] = '0';
+        }
+    }
+
+    // Ajouter un caractère nul à la fin pour transformer en chaîne
+    char str[length + 1]; // +1 pour le '\0'
+    memcpy(str, array, length); // Copier les caractères
+    str[length] = '\0'; // Ajouter '\0' à la fin
+    // Convertir la chaîne en flottant
+    float value = strtof(str, NULL);
+    return value;
+}
 
 int qualitativeToInt(char* str, char* val){
 
@@ -139,6 +155,10 @@ int activation(float z){
     }
 }
 
+float calculTauxErreur(float w1, float w2, float b, int* data, char* PatientsData[MAX_PATIENTS][MAX_FIELDS]){
+
+}
+
 typedef struct ResPerceptron{
     float w1;
     float w2;
@@ -147,15 +167,15 @@ typedef struct ResPerceptron{
     float error_rate;
 } ResPerceptron;
 
-ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FIELDS]){
+ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FIELDS], int* data_train){
 
     /* Effectue l'entrainement du perceptron pour les champs c1 et c2
     et retourne son taux d'erreur*/
 
     // Declaration des variables
-    float vect_x1[MAX_PATIENTS];
-    float vect_x2[MAX_PATIENTS];
-    float vect_risque[MAX_PATIENTS];    // vecteur contenant des 0 ou des 1
+    float vect_x1[3500];
+    float vect_x2[3500];
+    float vect_risque[3500];    // vecteur contenant des 0 ou des 1
     float w1;
     float w2;
     float b=1;
@@ -165,11 +185,15 @@ ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FI
     int cpt_erreurs;
 
     // Stocker les valeurs des champs c1 et c2 pour tous les patients, ainsi que leur risque respectif
-    for (int i=0; i<5000; i++){
-        vect_x1[i] = charToFloat(PatientsData[i][c1]);
-        vect_x2[i] = charToFloat(PatientsData[i][c2]);
-        vect_risque[i] = charToFloat(PatientsData[i][8]);
+    for (int i=0; i<3500; i++){
+        vect_x1[i] = CharToFloat(PatientsData[i][c1], strlen(PatientsData[i][c1]), c1);
+        vect_x2[i] = CharToFloat(PatientsData[i][c2], strlen(PatientsData[i][c2]), c2);
+        vect_risque[i] = CharToFloat(PatientsData[i][8], strlen(PatientsData[i][8]), 8);
     }
+
+    // for (int i=0; i<5; i++){
+    //     printf("patient=%d ; x1=%f ; x2=%f ; risk=%f\n", i, vect_x1[i], vect_x2[i], vect_risque[i]);
+    // }
 
     // Initialisation de w1 et w2 par un flottant aleatoire dans [-1;1]
     srand(time(NULL));
@@ -178,27 +202,28 @@ ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FI
 
 
     while (iteration < 100){    // au maximum 100 itérations
-        //printf("une iteration\n");
-        int test=0;
+
         cpt_erreurs = 0;
 
-        for (int patient=0; patient<3500; patient++){   // pour chaque patient
+        for (int i=0; i<3500; i++){   // pour chaque patient
+            int patient = data_train[i];
             
             // Utilisation de la fonction d'activation pour determiner le risque du patient
             int risque = activation(vect_x1[patient]*w1 + vect_x2[patient]*w2 + b);
 
             // Comparaison du risque predit avec le risque attendu
             if (risque != vect_risque[patient]){    // s'il s'agit d'une erreur
-                test++;
                 cpt_erreurs++;
 
                 // Modification des poids w1 et w2, ainsi que du biais b
                 w1 += nu * (vect_risque[patient] - risque) * vect_x1[patient];
                 w2 += nu * (vect_risque[patient] - risque) * vect_x2[patient];
                 b += nu * (vect_risque[patient] - risque);
+                if (patient <100){
+                    printf("w1=%f ; w2=%f\n", w1, w2);
+                }
             }
         }
-        printf("%d\n", test);
         iteration++;
     }
 
@@ -218,20 +243,17 @@ ResPerceptron perceptron(int c1, int c2, char* PatientsData[MAX_PATIENTS][MAX_FI
 
 
 int main(){
-
+    
     ////////////////////////////////////////////////////////
     // Initialisation de la structure de donnees
     char* PatientsData[MAX_PATIENTS][MAX_FIELDS];
+
     memset(PatientsData, 0, sizeof(PatientsData));
+
+    // Remplir le tableau avec les donnees des fichiers patients et livestyle
     BrowseFilePatients("patients.pengu", PatientsData);
     BrowseFileLivestyle("lifestyle.pengu", PatientsData);
-    for (int i = 0; i < MAX_PATIENTS; i++) {
-        for (int j = 0; j < MAX_FIELDS; j++) {
-            if (PatientsData[i][j]) {
-                free(PatientsData[i][j]);
-            }
-        }
-    }
+    
     ///////////////////////////////////////////////////////
     // Formation des deux jeux de donnees : entrainement et test    
     Res res = echantillonage(10, 0.7);
@@ -239,12 +261,15 @@ int main(){
     int* data_test = res.tab2;
     ///////////////////////////////////////////////////////
 
-    //int b; // = ?
+    // printf("!!!! %s !!!!\n", PatientsData[2][2]);
+    // printf("!!!! %f !!!!\n", CharToFloat(PatientsData[2][2], strlen(PatientsData[2][2]), 2));
+    // char* t = PatientsData[1][3];
+    // printf("char=%s ; float=%f\n", t, CharToFloat(t, strlen(t)));
 
     // Initialisation des variables permettant de stocker le meilleur score et les caracteristiques associees
     int best_c1 = 1;
     int best_c2 = 2;
-    float best_error_rate = perceptron(1, 2, PatientsData).error_rate;
+    float best_error_rate = perceptron(1, 2, PatientsData, data_train).error_rate;
 
     // Pour chaque couple (c1, c2) des champs de patients.pengu
     for (int c1 = 1; c1 < 8; c1++){
@@ -252,15 +277,15 @@ int main(){
             if (c1 != c2){
 
                 //printf("champs testes : %d et %d\n", c1, c2);
-                //ResPerceptron res = perceptron(c1, c2, PatientsData);
-                //printf("resultats : w1=%f, w2=%f, b=%f, nu=%f\n", res.w1, res.w2, res.b, res.nu);
-                //printf("taux d'erreur = %f\n", res.error_rate);
-                // float res = perceptron(c1, c2, b);
+                ResPerceptron res = perceptron(c1, c2, PatientsData, data_train);
+                // printf("resultats : w1=%f, w2=%f, b=%f, nu=%f\n", res.w1, res.w2, res.b, res.nu);
+                // printf("taux d'erreur = %f\n", res.error_rate);
 
-                // if (res < best_error_rate){ // Memoriser les meilleurs champs
-                //     best_c1 = c1;
-                //     best_c2 = c2;
-                // }
+                if (res.error_rate < best_error_rate){ // Memoriser les meilleurs champs
+                    best_c1 = c1;
+                    best_c2 = c2;
+                    best_error_rate = res.error_rate;
+                }
             }
             
         }
